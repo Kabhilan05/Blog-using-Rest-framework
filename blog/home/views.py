@@ -64,3 +64,48 @@ class BlogView(APIView):
                 'data':{},
                 'message':'Something went Wrong'
             },status=status.HTTP_400_BAD_REQUEST)
+
+
+    def patch(self,request):
+        try:
+            data = request.data
+            
+            blog =Blog.objects.filter(uid=data.get('uid'))
+
+            if not blog.exists():
+                 return Response({
+                    'data':{},
+                    'Message':'Invalid blog uid'
+                },status=status.HTTP_400_BAD_REQUEST)
+
+
+            
+            if request.user !=blog[0].user:
+                return Response({
+                    'data':{},
+                    'Message':'You are not authorised to edit this blog'
+                },status=status.HTTP_400_BAD_REQUEST)
+
+            serializer = BlogSerializer(blog[0],data=data,partial = True)
+            if not serializer.is_valid():
+                return Response({
+                    'data':serializer.errors,
+                    'message':'something went Wrong'
+                },status=status.HTTP_400_BAD_REQUEST)
+            serializer.save()
+
+
+            return Response({
+                'data':serializer.data,
+                'message':'Blog updated successfully',
+            },status=status.HTTP_201_CREATED)
+
+
+
+
+        except Exception as e:
+
+            return Response({
+                'Data':{},
+                'Message':'Something went wrong'
+            })
